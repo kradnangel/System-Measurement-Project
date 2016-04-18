@@ -9,16 +9,32 @@
 #ifndef __CPU_measurement__benchmark__
 #define __CPU_measurement__benchmark__
 
+#define TIMES 100000
 #include <iostream>
 
 class CPUBenchmark {
     
 private:
+    double read_overhead;
+    double loop_overhead;
 
 public:
+    CPUBenchmark();
     double get_read_overhead();
-    double get_loop_overhead(int times);
+    double get_loop_overhead(int times=TIMES);
+    double get_procedure_call_overhead(int num_arguments);
     double get_measurement_overhead();
 };
+
+
+// template procudure calls with various number of argurment
+static inline void fun_0(){}
+static inline void fun_1(int arg1){}
+static inline void fun_2(int arg1, int arg2){}
+static inline void fun_3(int arg1, int arg2, int arg3){}
+static inline void fun_4(int arg1, int arg2, int arg3, int arg4){}
+static inline void fun_5(int arg1, int arg2, int arg3, int arg4, int arg5){}
+static inline void fun_6(int arg1, int arg2, int arg3, int arg4, int arg5, int arg6){}
+static inline void fun_7(int arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7){}
 
 #endif /* defined(__CPU_measurement__benchmark__) */
