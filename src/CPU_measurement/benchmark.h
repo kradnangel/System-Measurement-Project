@@ -9,22 +9,26 @@
 #ifndef __CPU_measurement__benchmark__
 #define __CPU_measurement__benchmark__
 
-#define TIMES 100000
+#define SAMPLE_SIZE 10000
+#define SAMPLE_RATIO 0.01
 
 #include <iostream>
 #include <sys/types.h>
 #include <unistd.h>
+#include <algorithm>
 
 class CPUBenchmark {
     
 private:
     double read_overhead;
     double loop_overhead;
+    uint64_t cycles[SAMPLE_SIZE];
+    double get_sampled_average(uint64_t cycles[], int size=SAMPLE_SIZE, double ratio=SAMPLE_RATIO);
 
 public:
     CPUBenchmark();
     double get_read_overhead();
-    double get_loop_overhead(int times=TIMES);
+    double get_loop_overhead(int times=SAMPLE_SIZE);
     double get_procedure_call_overhead(int num_arguments);
     double get_system_call_overhead();
     double get_measurement_overhead();
@@ -40,5 +44,11 @@ static void fun_4(int arg1, int arg2, int arg3, int arg4){}
 static void fun_5(int arg1, int arg2, int arg3, int arg4, int arg5){}
 static void fun_6(int arg1, int arg2, int arg3, int arg4, int arg5, int arg6){}
 static void fun_7(int arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7){}
+
+static inline uint64_t rdtsc(){
+    unsigned int lo,hi;
+    __asm__ __volatile__ ("rdtsc" : "=a" (lo), "=d" (hi));
+    return ((uint64_t)hi << 32) | lo;
+}
 
 #endif /* defined(__CPU_measurement__benchmark__) */
