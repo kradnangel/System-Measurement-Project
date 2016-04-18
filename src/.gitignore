@@ -1,0 +1,5 @@
+*.o
+
+# XCode files
+*.xcodeproj
+*.1
