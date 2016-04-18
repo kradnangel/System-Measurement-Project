@@ -95,3 +95,17 @@ double CPUBenchmark::get_procedure_call_overhead(int num_arguments){
     }
     return (double(end - begin)/CLOCKS_PER_SEC - read_overhead) / TIMES - loop_overhead;
 }
+
+double CPUBenchmark::get_system_call_overhead(){
+    /*
+     http://man7.org/linux/man-pages/man2/getpid.2.html
+     getpid() returns the process ID of the calling process.  (This is
+     often used by routines that generate unique temporary filenames.)
+     */
+    clock_t begin = clock();
+    for (int i = 0; i < TIMES; i++)
+        getpid();
+    clock_t end = clock();
+    
+    return (double(end - begin)/CLOCKS_PER_SEC - read_overhead) / TIMES - loop_overhead;
+}

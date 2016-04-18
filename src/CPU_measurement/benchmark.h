@@ -12,6 +12,8 @@
 #define TIMES 100000
 
 #include <iostream>
+#include <sys/types.h>
+#include <unistd.h>
 
 class CPUBenchmark {
     
@@ -24,6 +26,7 @@ public:
     double get_read_overhead();
     double get_loop_overhead(int times=TIMES);
     double get_procedure_call_overhead(int num_arguments);
+    double get_system_call_overhead();
     double get_measurement_overhead();
 };
 
