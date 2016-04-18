@@ -23,14 +23,15 @@ int main(int argc, const char * argv[])
     
     /*2. Procedure call overhead*/
     cout << "2. Procedure call overhead" << endl;
-    for (int i = 0; i < 8; i++) {
-        cout << "  Procudure call with " << i << " arguments: " << benchmark.get_procedure_call_overhead(i) << "cycles" << endl;
+    for (int i = 7; i >= 0; i--) {
+        cout << "  Procudure call with " << i << " arguments: " << benchmark.get_procedure_call_overhead(i) << " cycles" << endl;
     }
     cout << endl;
 
     /*3. System call overhead*/
     cout << "3. System call overhead" << endl;
-    cout << "  Cost of getpid() system call: " << benchmark.get_system_call_overhead() << " cycles" << endl;
+    cout << "  Cost of getpid() system call: " << benchmark.get_system_call_overhead_0() << " cycles" << endl;
+    cout << "  Cost of getppid() system call: " << benchmark.get_system_call_overhead_1() << " cycles" << endl;
     cout << endl;
 
     

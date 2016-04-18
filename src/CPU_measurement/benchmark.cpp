@@ -7,8 +7,6 @@
 //
 
 #include "benchmark.h"
-#include <ctime>
-
 
 using namespace std;
 
@@ -50,93 +48,111 @@ double CPUBenchmark::get_procedure_call_overhead(int num_arguments){
     uint64_t begin, end;
     switch (num_arguments) {
         case 0:
+            begin = rdtsc();
             for (int i = 0; i < SAMPLE_SIZE; i++)
             {
-                begin = rdtsc();
                 fun_0();
-                end = rdtsc();
-                cycles[i] = end-begin;
+                fun_0();
+                fun_0();
+                fun_0();
+                fun_0();
             }
+            end = rdtsc();
             break;
         case 1:
-            
+            begin = rdtsc();
             for (int i = 0; i < SAMPLE_SIZE; i++)
             {
-                begin = rdtsc();    
-                fun_1(0);
-                end = rdtsc();
-                cycles[i] = end-begin;
+                fun_1(i);
+                fun_1(i);
+                fun_1(i);
+                fun_1(i);
+                fun_1(i);
             }
+            end = rdtsc();
             break;
         case 2:
-            
+            begin = rdtsc();
             for (int i = 0; i < SAMPLE_SIZE; i++)
             {
-                begin = rdtsc();    
-                fun_2(0, 0);
-                end = rdtsc();
-                cycles[i] = end-begin;
+                fun_2(i, i);
+                fun_2(i, i);
+                fun_2(i, i);
+                fun_2(i, i);
+                fun_2(i, i);
             }
+            end = rdtsc();
             break;
         case 3:
-            
+            begin = rdtsc();
             for (int i = 0; i < SAMPLE_SIZE; i++)
             {
-                begin = rdtsc();    
-                fun_3(0, 0, 0);
-                end = rdtsc();
-                cycles[i] = end-begin;
+                fun_3(i, i, i);
+                fun_3(i, i, i);
+                fun_3(i, i, i);
+                fun_3(i, i, i);
+                fun_3(i, i, i);
             }
+            end = rdtsc();
             break;
         case 4:
-            
+            begin = rdtsc();
             for (int i = 0; i < SAMPLE_SIZE; i++)
             {
-                begin = rdtsc();    
-                fun_4(0, 0, 0, 0);
-                end = rdtsc();
-                cycles[i] = end-begin;
+                fun_4(i, i, i, i);
+                fun_4(i, i, i, i);
+                fun_4(i, i, i, i);
+                fun_4(i, i, i, i);
+                fun_4(i, i, i, i);
             }
+            end = rdtsc();
             break;
         case 5:
-            
+            begin = rdtsc();
             for (int i = 0; i < SAMPLE_SIZE; i++)
             {
-                begin = rdtsc();    
-                fun_5(0, 0, 0, 0, 0);
-                end = rdtsc();
-                cycles[i] = end-begin;
+                fun_5(i, i, i, i, i);
+                fun_5(i, i, i, i, i);
+                fun_5(i, i, i, i, i);
+                fun_5(i, i, i, i, i);
+                fun_5(i, i, i, i, i);
             }
+            end = rdtsc();
             break;
         case 6:
-            
+            begin = rdtsc();
             for (int i = 0; i < SAMPLE_SIZE; i++)
             {
-                begin = rdtsc();    
-                fun_6(0, 0, 0, 0, 0, 0);
-                end = rdtsc();
-                cycles[i] = end-begin;
+                fun_6(i, i, i, i, i, i);
+                fun_6(i, i, i, i, i, i);
+                fun_6(i, i, i, i, i, i);
+                fun_6(i, i, i, i, i, i);
+                fun_6(i, i, i, i, i, i);
             }
+            end = rdtsc();
             break;
         case 7:
-            
+            begin = rdtsc();
             for (int i = 0; i < SAMPLE_SIZE; i++)
             {
-                begin = rdtsc();    
-                fun_7(0, 0, 0, 0, 0, 0, 0);
-                end = rdtsc();
-                cycles[i] = end-begin;
+                fun_7(i, i, i, i, i, i, i);
+                fun_7(i, i, i, i, i, i, i);
+                fun_7(i, i, i, i, i, i, i);
+                fun_7(i, i, i, i, i, i, i);
+                fun_7(i, i, i, i, i, i, i);
             }
+            end = rdtsc();
             break;
         default:
             // unanticipated input
             return -1;
             break;
     }
+    return ((end-begin-read_overhead)/SAMPLE_SIZE-loop_overhead)/5;
     return get_sampled_average(cycles) - read_overhead;
 }
 
-double CPUBenchmark::get_system_call_overhead(){
+double CPUBenchmark::get_system_call_overhead_0(){
     /*
      http://man7.org/linux/man-pages/man2/getpid.2.html
      getpid() returns the process ID of the calling process.  (This is
@@ -144,13 +160,36 @@ double CPUBenchmark::get_system_call_overhead(){
      */
     uint64_t begin, end;
 
+    begin = rdtsc();
     for (int i = 0; i < SAMPLE_SIZE; i++)
     {
-        begin = rdtsc();
         getpid();
-        end = rdtsc();
-        cycles[i] = end - begin;
+        getpid();
+        getpid();
+        getpid();
+        getpid();
     }
+    end = rdtsc();
+    return ((end-begin-read_overhead)/SAMPLE_SIZE-loop_overhead)/5;
+}
+
+double CPUBenchmark::get_system_call_overhead_1(){
+    /*
+     http://man7.org/linux/man-pages/man2/getpid.2.html
+     getpid() returns the process ID of the calling process.  (This is
+     often used by routines that generate unique temporary filenames.)
+     */
+    uint64_t begin, end;
     
-    return get_sampled_average(cycles) - read_overhead;
+    begin = rdtsc();
+    for (int i = 0; i < SAMPLE_SIZE; i++)
+    {
+        getppid();
+        getppid();
+        getppid();
+        getppid();
+        getppid();
+    }
+    end = rdtsc();
+    return ((end-begin-read_overhead)/SAMPLE_SIZE-loop_overhead)/5;
 }

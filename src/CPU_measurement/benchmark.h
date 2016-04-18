@@ -10,7 +10,7 @@
 #define __CPU_measurement__benchmark__
 
 #define SAMPLE_SIZE 10000
-#define SAMPLE_RATIO 0.01
+#define SAMPLE_RATIO 0.2
 
 #include <iostream>
 #include <sys/types.h>
@@ -30,7 +30,8 @@ public:
     double get_read_overhead();
     double get_loop_overhead(int times=SAMPLE_SIZE);
     double get_procedure_call_overhead(int num_arguments);
-    double get_system_call_overhead();
+    double get_system_call_overhead_0();
+    double get_system_call_overhead_1();
     double get_measurement_overhead();
 };
 
@@ -46,9 +47,18 @@ static void fun_6(int arg1, int arg2, int arg3, int arg4, int arg5, int arg6){}
 static void fun_7(int arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7){}
 
 static inline uint64_t rdtsc(){
-    unsigned int lo,hi;
-    __asm__ __volatile__ ("rdtsc" : "=a" (lo), "=d" (hi));
-    return ((uint64_t)hi << 32) | lo;
+//    unsigned int lo,hi;
+//    __asm__ __volatile__ ("rdtsc" : "=a" (lo), "=d" (hi));
+//    return ((uint64_t)hi << 32) | lo;
+    
+    uint64_t tsc;
+    __asm__ __volatile__("rdtscp; "         // serializing read of tsc
+                         "shl $32,%%rdx; "  // shift higher 32 bits stored in rdx up
+                         "or %%rdx,%%rax"   // and or onto rax
+                         : "=a"(tsc)        // output to tsc variable
+                         :
+                         : "%rcx", "%rdx"); // rcx and rdx are clobbered
+    return tsc;
 }
 
 #endif /* defined(__CPU_measurement__benchmark__) */
