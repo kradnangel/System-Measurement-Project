@@ -195,24 +195,32 @@ double CPUBenchmark::get_system_call_overhead_1(){
 }
 
 double CPUBenchmark::get_process_creation_overhead() {
-    uint64_t sum;
-    uint64_t begin, end;
+    uint64_t sum=0;
+    uint64_t begin, end_1, end_2;
+    int fd[2];
+    pipe(fd);
     pid_t pid;
 
     for(int i = 0; i < TASK_SAMPLE_SIZE; i++) {
-        // stop counting
+        // start counting
         begin = rdtsc();
         pid = fork();
+        end_1 = rdtsc();
+        
         if(pid == 0) {
             // exit as it's child process
+            write(fd[1], (void*)&end_1, sizeof(uint64_t));
             exit(1);
         }
         else {
-            // stop counting
-            end = rdtsc();
-            sum += end-begin;
             // wait child exit
             wait(NULL);
+            read(fd[0], (void*)&end_2, sizeof(uint64_t));
+            if (end_2-begin > end_1-begin)
+                sum += end_1-begin;
+            else
+                sum += end_2-begin;
+
         }
     }
     
@@ -220,19 +228,23 @@ double CPUBenchmark::get_process_creation_overhead() {
 }
 
 double CPUBenchmark::get_kernel_thread_creation_overhead() {
-    uint64_t begin, end;
+    uint64_t begin, end_1, end_2, sum=0;
     pthread_t thread;
-    void* thread_rountine(void *ptr);
+    void* thread_set_end(void * result);
     
-    begin = rdtsc();
     for(int i = 0; i < TASK_SAMPLE_SIZE; i++) {
-        pthread_create(&thread, NULL, &thread_rountine, NULL);
+        begin = rdtsc();
+        pthread_create(&thread, NULL, &thread_set_end, &end_1);
+        end_2 = rdtsc();
         // wait for threads
         pthread_join(thread, NULL);
+        if (end_2-begin > end_1-begin)
+            sum += end_1-begin;
+        else
+            sum += end_2-begin;
     }
-    end = rdtsc();
     
-    return (end-begin-read_overhead)/TASK_SAMPLE_SIZE-loop_overhead;
+    return sum/TASK_SAMPLE_SIZE-read_overhead;
 }
 
 double CPUBenchmark::get_process_context_switch_time_once(){
