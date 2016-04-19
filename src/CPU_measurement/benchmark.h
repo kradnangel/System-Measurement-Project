@@ -38,6 +38,8 @@ public:
     double get_measurement_overhead();
     double get_process_creation_overhead();
     double get_kernel_thread_creation_overhead();
+    double get_process_context_switch_time_once();
+    double get_thread_context_switch_time_once();
     double get_process_context_switch_time();
     double get_thread_context_switch_time();
 };

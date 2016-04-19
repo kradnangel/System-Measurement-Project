@@ -234,15 +234,15 @@ double CPUBenchmark::get_kernel_thread_creation_overhead() {
     return (end-begin-read_overhead)/TASK_SAMPLE_SIZE-loop_overhead;
 }
 
-double CPUBenchmark::get_process_context_switch_time(){
+double CPUBenchmark::get_process_context_switch_time_once(){
     int fd[2];
     pipe(fd);
     uint64_t begin;
     uint64_t end;
-    pid_t cpid;
+    pid_t pid;
     uint64_t result = 0;
 
-    if ((cpid = fork()) != 0) {
+    if ((pid = fork()) != 0) {
         begin = rdtsc();
         wait(NULL);
         read(fd[0], (void*)&end, sizeof(uint64_t));
@@ -258,7 +258,19 @@ double CPUBenchmark::get_process_context_switch_time(){
     return result;
 }
 
-double CPUBenchmark::get_thread_context_switch_time(){
+double CPUBenchmark::get_process_context_switch_time(){
+    double sum;
+    double cycles;
+    
+    for (int i=0; i<TASK_SAMPLE_SIZE; i++) {
+        while((cycles=get_process_context_switch_time_once())<=0){};
+        sum += cycles;
+    }
+    
+    return sum/TASK_SAMPLE_SIZE;
+}
+
+double CPUBenchmark::get_thread_context_switch_time_once(){
     uint64_t begin;
     uint64_t end;
     
@@ -272,6 +284,18 @@ double CPUBenchmark::get_thread_context_switch_time(){
     pthread_join(thread, NULL);
     
     return end - begin;
+}
+
+double CPUBenchmark::get_thread_context_switch_time(){
+    double sum;
+    double cycles;
+    
+    for (int i=0; i<TASK_SAMPLE_SIZE; i++) {
+        while((cycles=get_thread_context_switch_time_once())<=0){};
+        sum += cycles;
+    }
+    
+    return sum/TASK_SAMPLE_SIZE;
 }
 
 void* foo(void * result) {
