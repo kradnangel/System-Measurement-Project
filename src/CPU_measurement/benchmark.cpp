@@ -196,19 +196,20 @@ double CPUBenchmark::get_system_call_overhead_1(){
 
 double CPUBenchmark::get_process_creation_overhead() {
     uint64_t sum;
-    uint64_t start, end;
+    uint64_t begin, end;
     pid_t pid;
 
     for(int i = 0; i < TASK_SAMPLE_SIZE; i++) {
-        start = rdtsc();
+        begin = rdtsc();
         pid = fork();
+        
         if(pid == 0) {
             // child process, just exit
             exit(1);
         }
         else {
             end = rdtsc();
-            sum += end-start;
+            sum += end-begin;
             // parent process, wait child exit
             wait(NULL);
         }
@@ -217,16 +218,32 @@ double CPUBenchmark::get_process_creation_overhead() {
     return sum/TASK_SAMPLE_SIZE-read_overhead;
 }
 
+double CPUBenchmark::get_kernel_thread_creation_overhead() {
+    uint64_t begin, end;
+    pthread_t thread;
+    void* thread_rountine(void *ptr);
+    
+    begin = rdtsc();
+    for(int i = 0; i < TASK_SAMPLE_SIZE; i++) {
+        pthread_create(&thread, NULL, &thread_rountine, NULL);
+        // make the main process to wait new thread
+        pthread_join(thread, NULL);
+    }
+    end = rdtsc();
+    
+    return (end-begin-read_overhead)/TASK_SAMPLE_SIZE-loop_overhead;
+}
+
 double CPUBenchmark::get_process_context_switch_time(){
     int fd[2];
     pipe(fd);
-    uint64_t start;
+    uint64_t begin;
     uint64_t end;
     pid_t cpid;
     uint64_t result = 0;
 
     if ((cpid = fork()) != 0) {
-        start = rdtsc();
+        begin = rdtsc();
         wait(NULL);
         read(fd[0], (void*)&end, sizeof(uint64_t));
     }
@@ -235,14 +252,14 @@ double CPUBenchmark::get_process_context_switch_time(){
         write(fd[1], (void*)&end, sizeof(uint64_t));
         exit(1);
     }
-    if(end > start){
-        result = end - start;
+    if(end > begin){
+        result = end - begin;
     }
     return result;
 }
 
 double CPUBenchmark::get_thread_context_switch_time(){
-    uint64_t start;
+    uint64_t begin;
     uint64_t end;
     
     pthread_t thread;
@@ -251,14 +268,19 @@ double CPUBenchmark::get_thread_context_switch_time(){
 
     pthread_create(&thread, NULL, foo, &end);
     
-    start = rdtsc();
+    begin = rdtsc();
     pthread_join(thread, NULL);
     
-    return end - start;
+    return end - begin;
 }
 
 void* foo(void * result) {
     uint64_t end = rdtsc();
     *((uint64_t*)result) = end;
     pthread_exit(NULL);
+}
+
+void* thread_rountine(void *ptr) {
+    // avoid of overhead
+    pthread_exit(0);
 }

@@ -37,6 +37,7 @@ public:
     double get_system_call_overhead_1();
     double get_measurement_overhead();
     double get_process_creation_overhead();
+    double get_kernel_thread_creation_overhead();
     double get_process_context_switch_time();
     double get_thread_context_switch_time();
 };

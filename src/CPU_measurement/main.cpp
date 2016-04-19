@@ -36,8 +36,10 @@ int main(int argc, const char * argv[])
 
     /* 4. Task creation time */
     cout << "4. Task creation time" << endl;
-    cout << "  Cost: " << endl;
-    cout << benchmark.get_process_creation_overhead();
+    cout << "  Process creation cost: " << endl;
+    cout << benchmark.get_process_creation_overhead() << " cycles" << endl;
+    cout << "  Thread creation cost: " << endl;
+    cout << benchmark.get_kernel_thread_creation_overhead() << " cycles" << endl;
     cout << endl;
     
     /* 5. Context switch time */
