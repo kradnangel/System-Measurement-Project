@@ -193,3 +193,72 @@ double CPUBenchmark::get_system_call_overhead_1(){
     end = rdtsc();
     return ((end-begin-read_overhead)/SAMPLE_SIZE-loop_overhead)/5;
 }
+
+double CPUBenchmark::get_process_creation_overhead() {
+    uint64_t sum;
+    uint64_t start, end;
+    pid_t pid;
+
+    for(int i = 0; i < TASK_SAMPLE_SIZE; i++) {
+        start = rdtsc();
+        pid = fork();
+        if(pid == 0) {
+            // child process, just exit
+            exit(1);
+        }
+        else {
+            end = rdtsc();
+            sum += end-start;
+            // parent process, wait child exit
+            wait(NULL);
+        }
+    }
+    
+    return sum/TASK_SAMPLE_SIZE-read_overhead;
+}
+
+double CPUBenchmark::get_process_context_switch_time(){
+    int fd[2];
+    pipe(fd);
+    uint64_t start;
+    uint64_t end;
+    pid_t cpid;
+    uint64_t result = 0;
+
+    if ((cpid = fork()) != 0) {
+        start = rdtsc();
+        wait(NULL);
+        read(fd[0], (void*)&end, sizeof(uint64_t));
+    }
+    else {
+        end = rdtsc();
+        write(fd[1], (void*)&end, sizeof(uint64_t));
+        exit(1);
+    }
+    if(end > start){
+        result = end - start;
+    }
+    return result;
+}
+
+double CPUBenchmark::get_thread_context_switch_time(){
+    uint64_t start;
+    uint64_t end;
+    
+    pthread_t thread;
+    
+    void* foo(void * result);
+
+    pthread_create(&thread, NULL, foo, &end);
+    
+    start = rdtsc();
+    pthread_join(thread, NULL);
+    
+    return end - start;
+}
+
+void* foo(void * result) {
+    uint64_t end = rdtsc();
+    *((uint64_t*)result) = end;
+    pthread_exit(NULL);
+}

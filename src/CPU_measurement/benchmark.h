@@ -12,10 +12,13 @@
 #define SAMPLE_SIZE 10000
 #define SAMPLE_RATIO 0.2
 
+#define TASK_SAMPLE_SIZE 10
+
 #include <iostream>
 #include <sys/types.h>
 #include <unistd.h>
 #include <algorithm>
+#include <pthread.h>
 
 class CPUBenchmark {
     
@@ -33,6 +36,9 @@ public:
     double get_system_call_overhead_0();
     double get_system_call_overhead_1();
     double get_measurement_overhead();
+    double get_process_creation_overhead();
+    double get_process_context_switch_time();
+    double get_thread_context_switch_time();
 };
 
 
