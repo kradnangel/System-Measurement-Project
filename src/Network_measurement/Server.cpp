@@ -53,7 +53,7 @@ int main(int argc, char** argv)
     if(argv[1])
         myport = atoi(argv[1]);
     else
-        myport = 1234;
+        myport = 9999;
     
     if(argv[2])
         lisnum = atoi(argv[2]);

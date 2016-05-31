@@ -22,7 +22,7 @@
 
 #define FREQUENCE 2.4e9
 #define MAXBUF 1024
-#define PACKAGE_SIZE 56
+#define PACKAGE_SIZE 1
 #define SAMPLES 100
 
 using namespace std;
@@ -42,20 +42,6 @@ static inline uint64_t rdtsc(){
     return tsc;
 }
 
-double standard_deviation(double data[], int n)
-{
-    float mean=0.0, sum_deviation=0.0;
-    int i;
-    for(i=0; i<n;++i)
-    {
-        mean+=data[i];
-    }
-    mean=mean/n;
-    for(i=0; i<n;++i)
-        sum_deviation+=(data[i]-mean)*(data[i]-mean);
-    return sqrt(sum_deviation/n);
-}
-
 int main(int argc, char **argv)
 {
     int sockfd;
@@ -72,13 +58,8 @@ int main(int argc, char **argv)
     double maxTime = -100000;
     
     bzero(buf, MAXBUF + 1);
-    
-    for ( int i = 0; i < PACKAGE_SIZE ; i ++) {
-        buf[i] = '0' + i%10;
-        if ( (i + 1) % 10 ==0) {
-            buf[i] = 'x';
-        }
-    }
+    for (int i = 0; i < PACKAGE_SIZE ; i ++)
+        buf[i] = 'x';
     
     if (argc != 3) {
         cout << "Please input IP number and port number" << endl;
@@ -151,7 +132,6 @@ int main(int argc, char **argv)
         cout << "Time: " << rawTime << endl;
     }
     
-    printf("\nTCP round-trip min/avg/max/stddev avgTime is  %f/%f/%f/%f ms\n",minTime, (totalTime/SAMPLES),maxTime,standard_deviation(dataPoint,SAMPLES));
     close(sockfd);
     return 0;
 }
