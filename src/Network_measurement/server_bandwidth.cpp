@@ -1,3 +1,12 @@
+//
+//  server_bandwidth.cpp
+//  Network_measurement
+//
+//  Created by Kun on 5/31/16.
+//  Copyright (c) 2016 Kun. All rights reserved.
+//
+
+#include "server_bandwidth.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -15,8 +24,7 @@
 #include <fstream>
 #include <iostream>
 
-#define MAXBUF (1024*1024*128)
-#define MAX_DATABUF 4096
+#define PACKAGE_SIZE (1024*1024*1)
 
 using namespace std;
 
@@ -31,7 +39,8 @@ typedef struct CLIENT {
  ****************************/
 int main(int argc, char** argv)
 {
-    int i,n,maxi = -1;
+    int i,maxi = -1;
+    long n;
     int nready;
     int slisten,sockfd,maxfd=-1,connectfd;
     
@@ -43,7 +52,7 @@ int main(int argc, char** argv)
     socklen_t len;
     fd_set rset,allset;
     
-    char *buf = (char*)malloc(sizeof(char)*MAXBUF);
+    char *buf = (char*)malloc(sizeof(char)*PACKAGE_SIZE);
     CLIENT client[FD_SETSIZE];
     
     if(argv[1])
@@ -144,24 +153,31 @@ int main(int argc, char** argv)
             }
             else
             {
-                for(i=0;i<=maxi;i++)
+                for(i = 0;i <= maxi;i++)
                 {
                     if((sockfd = client[i].fd)<0)
                         continue;
                     if(FD_ISSET(sockfd,&rset))
                     {
-                        bzero(buf,MAXBUF + 1);
-                        int j_request_type=0;
-                        if((n = recv(sockfd,buf,MAXBUF,0)) > 0) {
-                            
-                            printf("received data:%s\n from %s size: %lu\n",buf,inet_ntoa(client[i].addr.sin_addr),strlen(buf));
-                            
-                            std::cout<<"going to echo"<<std::endl;
-                            write(sockfd, buf, strlen(buf));
-                            
+                        bzero(buf, PACKAGE_SIZE);
+                        long received_n = 0;
+                        while (received_n < PACKAGE_SIZE) {
+                            if((n = recv(sockfd, buf, PACKAGE_SIZE, 0)) > 0) {
+                                received_n += n;
+                                printf("received data from %s size: %lu\n, total size: %lu\n",inet_ntoa(client[i].addr.sin_addr), n, received_n);
+                                
+                            }
+                            else {
+                                break;
+                            }
                         }
-                        
+                        if(received_n == PACKAGE_SIZE) {
+                            cout<<"received whole package"<<endl;
+                            write(sockfd, "OK", strlen("OK"));
+                        }
                         else {
+                            cout<<"received " << double(received_n)/PACKAGE_SIZE << "% package"<<endl;
+                            write(sockfd, "Failed", strlen("Failed"));
                             printf("disconnected by client!\n");
                             close(sockfd);
                             FD_CLR(sockfd,&allset);
