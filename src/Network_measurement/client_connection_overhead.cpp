@@ -9,6 +9,7 @@
 #include "client_connection_overhead.h"
 
 #include <iostream>
+#include <fstream>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
@@ -54,8 +55,12 @@ int main(int argc, char **argv)
     
     double  start;
     double  end;
-    double  rawTime;
-    
+    double  setup_time, teardown_time;
+
+    ofstream fout;
+    fout.open ("result/connection.csv");
+    fout << "Set up(ms), Tear down(ms)" << endl;
+
     if (argc != 3) {
         cout << "Please input IP number and port number" << endl;
         exit(-1);
@@ -81,14 +86,17 @@ int main(int argc, char **argv)
             exit(errno);
         }
         end = rdtsc();
-        rawTime = (end - start)/FREQUENCE*1000;
-        cout << "Setup time: " << rawTime << endl;
+        setup_time = (end - start)/FREQUENCE*1000;
         
         start = rdtsc();
         close(sockfd);
         end = rdtsc();
-        rawTime = (end - start)/FREQUENCE*1000;
-        cout << "Teardown time: " << rawTime << endl;
+        teardown_time = (end - start)/FREQUENCE*1000;
+        
+        cout << "Setup time: " << setup_time << endl;
+        cout << "Teardown time: " << teardown_time << endl;
+        
+        fout << setup_time << ", " << teardown_time << endl;
     }
     return 0;
 }

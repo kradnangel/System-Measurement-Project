@@ -24,7 +24,7 @@
 #include <fstream>
 #include <iostream>
 
-#define PACKAGE_SIZE (1024*1024*1)
+#define MAX_PACKAGE_SIZE (1024*1024*128)
 
 using namespace std;
 
@@ -52,7 +52,7 @@ int main(int argc, char** argv)
     socklen_t len;
     fd_set rset,allset;
     
-    char *buf = (char*)malloc(sizeof(char)*PACKAGE_SIZE);
+    char *buf = (char*)malloc(sizeof(char)*MAX_PACKAGE_SIZE);
     CLIENT client[FD_SETSIZE];
     
     if(argv[1])
@@ -159,10 +159,22 @@ int main(int argc, char** argv)
                         continue;
                     if(FD_ISSET(sockfd,&rset))
                     {
-                        bzero(buf, PACKAGE_SIZE);
                         long received_n = 0;
-                        while (received_n < PACKAGE_SIZE) {
-                            if((n = recv(sockfd, buf, PACKAGE_SIZE, 0)) > 0) {
+                        int package_size = 0;
+                        if ((n = recv(sockfd, buf, MAX_PACKAGE_SIZE, 0)) == sizeof(package_size))
+                        {
+                            package_size = *(int*)buf;
+                            cout << "Got package size: " << package_size << endl;
+                            send(sockfd, "OK", strlen("OK"), 0);
+                        }
+                        else
+                        {
+                            cout << "Unable to get package info" << endl;
+                            send(sockfd, "failed", strlen("failed"), 0);
+                            continue;
+                        }
+                        while (received_n < package_size) {
+                            if((n = recv(sockfd, buf, package_size, 0)) > 0) {
                                 received_n += n;
                                 printf("received data from %s size: %lu\n, total size: %lu\n",inet_ntoa(client[i].addr.sin_addr), n, received_n);
                                 
@@ -171,12 +183,12 @@ int main(int argc, char** argv)
                                 break;
                             }
                         }
-                        if(received_n == PACKAGE_SIZE) {
+                        if(received_n == package_size) {
                             cout<<"received whole package"<<endl;
                             write(sockfd, "OK", strlen("OK"));
                         }
                         else {
-                            cout<<"received " << double(received_n)/PACKAGE_SIZE << "% package"<<endl;
+                            cout<<"received " << double(received_n)/package_size << "% package"<<endl;
                             write(sockfd, "Failed", strlen("Failed"));
                             printf("disconnected by client!\n");
                             close(sockfd);

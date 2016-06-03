@@ -9,6 +9,7 @@
 #include "client_bandwidth.h"
 
 #include <iostream>
+#include <fstream>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
@@ -20,12 +21,14 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include <sys/types.h>
-#include <math.h>
+#include "helper.h"
 
 #define FREQUENCE 2.4e9
-#define PACKAGE_SIZE (1024*1024*1)
+#define MAX_PACKAGE_SIZE (1024*1024*128)
+#define MIN_PACKAGE_SIZE (1024*128)
+#define MB (1024*1024)
 #define MAXBUF 1024
-#define SAMPLES 100
+#define SAMPLES 5
 
 using namespace std;
 
@@ -49,17 +52,18 @@ int main(int argc, char **argv)
     int sockfd;
     long len;
     struct sockaddr_in dest;
-    char *buf = (char*)malloc(sizeof(char)*PACKAGE_SIZE);
+    char *buf = (char*)malloc(sizeof(char)*MAX_PACKAGE_SIZE);
     char recBuf [MAXBUF +1];
     
     double  start;
     double  end;
-    double  rawTime;
+    double  speed;
     
-    double minTime = 1000000;
-    double maxTime = -100000;
+    ofstream fout;
+    fout.open ("result/bandwidth.csv");
+    fout << "Package size (MB), Bandwidth(MB/s)" << endl;
     
-    memset(buf, 1, PACKAGE_SIZE);
+    memset(buf, 1, MAX_PACKAGE_SIZE);
 
     if (argc != 3) {
         cout << "Please input IP number and port number" << endl;
@@ -86,46 +90,60 @@ int main(int argc, char **argv)
     
     printf("connect to server...\n");
     
-    double dataPoint[SAMPLES];
+    double speeds[SAMPLES];
     double totalTime = 0;
-    for (int i = 0; i < SAMPLES; i++) {
-        //start
-        start = rdtsc();
-        len = send(sockfd, buf, PACKAGE_SIZE, 0);
-        if (len > 0)
-            printf("package send successful Totalbytes: %ld\n", len);
-        else {
-            printf("package send failed!\n");
-            continue;
-        }
-        
-        printf("Start receiving echo message\n");
-        bzero(recBuf, MAXBUF + 1);
-        
-        len = recv(sockfd, recBuf, MAXBUF, 0);
-        if (len > 0)   {
-            printf("recv: %s, total: %ld \n", recBuf, len);
-        }
-        else
-        {
-            if (len < 0)
-                printf("recv failed rrno:%d error msg: '%s'\n", errno, strerror(errno));
+    for (int package_size = MIN_PACKAGE_SIZE; package_size <= MAX_PACKAGE_SIZE; package_size *= 4)
+    {
+        for (int i = 0; i < SAMPLES; i++) {
+            //start
+            send(sockfd, &package_size, sizeof(package_size), 0);
+            cout << "Sending package info." << endl;
+            len = recv(sockfd, recBuf, MAXBUF, 0);
+            if (strcmp(recBuf, "OK") != 0)
+            {
+                cout << "Package info sending failed." << endl;
+                i--;
+                continue;
+            }
             else
-                printf("other exit erminal chat\n");
+            {
+                cout << "Package info confirmed." << endl;
+            }
             
-            continue;
-        }
+            start = rdtsc();
+            len = send(sockfd, buf, package_size, 0);
+            if (len > 0)
+                printf("package send successful Totalbytes: %ld\n", len);
+            else {
+                printf("package send failed!\n");
+                continue;
+            }
+            
+            printf("Start receiving echo message\n");
+            bzero(recBuf, MAXBUF + 1);
+            
+            len = recv(sockfd, recBuf, MAXBUF, 0);
+            if (len > 0)   {
+                printf("recv: %s, total: %ld \n", recBuf, len);
+            }
+            else
+            {
+                if (len < 0)
+                    printf("recv failed rrno:%d error msg: '%s'\n", errno, strerror(errno));
+                else
+                    printf("other exit erminal chat\n");
+                
+                continue;
+            }
 
-        end = rdtsc();
-        
-        rawTime = (end - start)/FREQUENCE*1000;
-        totalTime += rawTime;
-        if(rawTime > maxTime)
-            maxTime = rawTime;
-        if(rawTime < minTime)
-            minTime = rawTime;
-        dataPoint[i] = rawTime;
-        cout << "Time: " << rawTime << endl;
+            end = rdtsc();
+            
+            speed = double(package_size)/MB/((end - start)/FREQUENCE);
+            speeds[i] = speed;
+            cout << "Speed: " << speed << "MB/s" << endl;
+        }
+        fout << double(package_size)/MB << ", " << average(speeds, SAMPLES) << endl;
+
     }
     
     close(sockfd);

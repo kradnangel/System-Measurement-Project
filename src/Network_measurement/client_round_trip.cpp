@@ -7,6 +7,7 @@
 //
 
 #include <iostream>
+#include <fstream>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
@@ -18,11 +19,12 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include <sys/types.h>
-#include <math.h>
+
+#include "helper.h"
 
 #define FREQUENCE 2.4e9
 #define MAXBUF 1024
-#define PACKAGE_SIZE 1
+#define MAX_PACKAGE_SIZE 1024
 #define SAMPLES 100
 
 using namespace std;
@@ -57,8 +59,12 @@ int main(int argc, char **argv)
     double minTime = 1000000;
     double maxTime = -100000;
     
+    ofstream fout;
+    fout.open ("result/round_trip.csv");
+    fout << "Package size, min(ms), max(ms), avg(ms), std(ms)" << endl;
+    
     bzero(buf, MAXBUF + 1);
-    for (int i = 0; i < PACKAGE_SIZE ; i ++)
+    for (int i = 0; i < MAX_PACKAGE_SIZE ; i ++)
         buf[i] = 'x';
     
     if (argc != 3) {
@@ -86,50 +92,39 @@ int main(int argc, char **argv)
     
     printf("connect to server...\n");
     
-    double dataPoint[SAMPLES];
+    double times[SAMPLES];
     double totalTime = 0;
-    for (int i = 0; i < SAMPLES; i++) {
-        //start
-        start = rdtsc();
-        len = send(sockfd, buf, strlen(buf), 0);
-        if (len > 0)
-            printf("msg:%s send successful Totalbytes: %ld\n", buf, len);
-        else {
-            printf("msg:'%s  failed!\n", buf);
-            continue;
-        }
-        
-        printf("Start receiving echo message\n");
-        bzero(recBuf, MAXBUF + 1);
-        
-        long tempRec = 0;
-        while (tempRec != PACKAGE_SIZE) {
-            len = recv(sockfd, recBuf, MAXBUF, 0);
-            if (len > 0)   {
-                printf("recv:'%s, total: %ld \n", buf, len);
-                tempRec = tempRec + len;
-            }
-            else
-            {
-                if (len < 0)
-                    printf("recv failed rrno:%d error msg: '%s'\n", errno, strerror(errno));
-                else
-                    printf("other exit erminal chat\n");
-                
+    for (int package_size = 1; package_size <= MAX_PACKAGE_SIZE; package_size *= 2)
+    {
+        for (int i = 0; i < SAMPLES; i++) {
+            //start
+            start = rdtsc();
+            len = send(sockfd, buf, package_size, 0);
+            if (len > 0)
+                printf("msg send successful Totalbytes: %ld\n", len);
+            else {
+                printf("msg failed!\n");
                 continue;
             }
+            
+            printf("Start receiving echo message\n");
+            
+            len = recv(sockfd, recBuf, MAXBUF, 0);
+            if (len > 0)   {
+                printf("recv total: %ld \n", len);
+            }
+            end = rdtsc();
+            
+            rawTime = (end - start)/FREQUENCE*1000;
+            totalTime += rawTime;
+            if(rawTime > maxTime)
+                maxTime = rawTime;
+            if(rawTime < minTime)
+                minTime = rawTime;
+            times[i] = rawTime;
+            cout << "Time: " << rawTime << endl;
         }
-        
-        end = rdtsc();
-        
-        rawTime = (end - start)/FREQUENCE*1000;
-        totalTime += rawTime;
-        if(rawTime > maxTime)
-            maxTime = rawTime;
-        if(rawTime < minTime)
-            minTime = rawTime;
-        dataPoint[i] = rawTime;
-        cout << "Time: " << rawTime << endl;
+        fout << package_size << ", " << minTime << ", " << maxTime << ", " << average(times, SAMPLES) << ", " << standard_deviation(times, SAMPLES) << endl;
     }
     
     close(sockfd);
