@@ -21,7 +21,7 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include <sys/types.h>
-#include <math.h>
+#include "helper.h"
 
 #define FREQUENCE 2.4e9
 #define PACKAGE_SIZE (1024*1024*1)
@@ -55,7 +55,7 @@ int main(int argc, char **argv)
     
     double  start;
     double  end;
-    double  setup_time, teardown_time;
+    double  setup_times[SAMPLES], teardown_times[SAMPLES];
 
     ofstream fout;
     fout.open ("result/connection.csv");
@@ -86,17 +86,20 @@ int main(int argc, char **argv)
             exit(errno);
         }
         end = rdtsc();
-        setup_time = (end - start)/FREQUENCE*1000;
+        setup_times[i] = (end - start)/FREQUENCE*1000;
         
         start = rdtsc();
         close(sockfd);
         end = rdtsc();
-        teardown_time = (end - start)/FREQUENCE*1000;
+        teardown_times[i] = (end - start)/FREQUENCE*1000;
         
-        cout << "Setup time: " << setup_time << endl;
-        cout << "Teardown time: " << teardown_time << endl;
-        
-        fout << setup_time << ", " << teardown_time << endl;
+        cout << "Setup time: " << setup_times[i] << endl;
+        cout << "Teardown time: " << teardown_times[i] << endl;
     }
+    fout << "Setup, " << min(setup_times, SAMPLES) << ", " << max(setup_times, SAMPLES) << ", " << average(setup_times, SAMPLES) << ", " << standard_deviation(setup_times, SAMPLES) << endl;
+
+    fout << "Teardown, " << min(teardown_times, SAMPLES) << ", " << max(teardown_times, SAMPLES) << ", " << average(teardown_times, SAMPLES) << ", " << standard_deviation(teardown_times, SAMPLES) << endl;
+
+    
     return 0;
 }

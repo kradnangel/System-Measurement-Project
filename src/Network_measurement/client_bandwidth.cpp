@@ -24,8 +24,8 @@
 #include "helper.h"
 
 #define FREQUENCE 2.4e9
-#define MAX_PACKAGE_SIZE (1024*1024*128)
-#define MIN_PACKAGE_SIZE (1024*128)
+#define MAX_PACKAGE_SIZE (1024*1024*64)
+#define MIN_PACKAGE_SIZE (1024*1)
 #define MB (1024*1024)
 #define MAXBUF 1024
 #define SAMPLES 5

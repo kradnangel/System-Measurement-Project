@@ -150,7 +150,6 @@ int main(int argc, char** argv)
                         continue;
                     if(FD_ISSET(sockfd,&rset))
                     {
-                        bzero(buf,MAXBUF + 1);
                         int j_request_type=0;
                         if((n = recv(sockfd,buf,MAXBUF,0)) > 0) {
                             

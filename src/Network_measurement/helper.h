@@ -38,4 +38,28 @@ float average(double data[], int n)
     return mean;
 }
 
+float min(double data[], int n)
+{
+    double min=data[0];
+    int i;
+    for(i=0; i<n;++i)
+    {
+        if (data[i] < min)
+            min = data[i];
+    }
+    return min;
+}
+
+float max(double data[], int n)
+{
+    double max=data[0];
+    int i;
+    for(i=0; i<n;++i)
+    {
+        if (data[i] > max)
+            max = data[i];
+    }
+    return max;
+}
+
 #endif /* defined(__Network_measurement__helper__) */
