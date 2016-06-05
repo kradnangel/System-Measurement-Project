@@ -100,19 +100,19 @@ int main(int argc, char **argv)
             //start
             start = rdtsc();
             len = send(sockfd, buf, package_size, 0);
-            if (len > 0)
-                printf("msg send successful Totalbytes: %ld\n", len);
-            else {
-                printf("msg failed!\n");
-                continue;
-            }
-            
-            printf("Start receiving echo message\n");
+//            if (len > 0)
+//                printf("msg send successful Totalbytes: %ld\n", len);
+//            else {
+//                printf("msg failed!\n");
+//                continue;
+//            }
+//            
+//            printf("Start receiving echo message\n");
             
             len = recv(sockfd, recBuf, MAXBUF, 0);
-            if (len > 0)   {
-                printf("recv total: %ld \n", len);
-            }
+//            if (len > 0)   {
+//                printf("recv total: %ld \n", len);
+//            }
             end = rdtsc();
             
             rawTime = (end - start)/FREQUENCE*1000;
@@ -124,7 +124,7 @@ int main(int argc, char **argv)
             times[i] = rawTime;
             cout << "Time: " << rawTime << endl;
         }
-        fout << package_size << ", " << minTime << ", " << maxTime << ", " << average(times, SAMPLES) << ", " << standard_deviation(times, SAMPLES) << endl;
+        fout << package_size << ", " << min(times, SAMPLES) << ", " << max(times, SAMPLES) << ", " << average(times, SAMPLES) << ", " << standard_deviation(times, SAMPLES) << endl;
     }
     
     close(sockfd);

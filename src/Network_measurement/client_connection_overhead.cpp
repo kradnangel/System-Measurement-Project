@@ -59,7 +59,7 @@ int main(int argc, char **argv)
 
     ofstream fout;
     fout.open ("result/connection.csv");
-    fout << "Set up(ms), Tear down(ms)" << endl;
+    fout << ", min(ms), max(ms), avg(ms), std(ms) " << endl;
 
     if (argc != 3) {
         cout << "Please input IP number and port number" << endl;

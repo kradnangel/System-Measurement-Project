@@ -153,9 +153,9 @@ int main(int argc, char** argv)
                         int j_request_type=0;
                         if((n = recv(sockfd,buf,MAXBUF,0)) > 0) {
                             
-                            printf("received data:%s\n from %s size: %lu\n",buf,inet_ntoa(client[i].addr.sin_addr),strlen(buf));
-                            
-                            std::cout<<"going to echo"<<std::endl;
+//                            printf("received data:%s\n from %s size: %lu\n",buf,inet_ntoa(client[i].addr.sin_addr),strlen(buf));
+//                            
+//                            std::cout<<"going to echo"<<std::endl;
                             write(sockfd, buf, strlen(buf));
                             
                         }
