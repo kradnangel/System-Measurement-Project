@@ -1,4 +1,2 @@
 # System-Measurement-Project
-System Measurement Project
-
-[Latex](https://www.sharelatex.com/project/5714229bec05203c02eb937a)
+This is the System Measurement Project for UCSD class, CSE 221.
